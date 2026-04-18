@@ -8,16 +8,17 @@ jobs:
   build:
     runs-on: self-hosted
 
-    container:
-      image: maven:3.9-eclipse-temurin-17
-      options: --user root
-
     env:
       SONAR_URL: http://44.211.80.125:9000/
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
+
+    - name: Build Maven project
+      run: |
+        cd spring-boot-app
+        mvn clean package
 
     - name: Verify Java
       run: |

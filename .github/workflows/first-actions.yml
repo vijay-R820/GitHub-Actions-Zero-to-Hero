@@ -9,7 +9,7 @@ jobs:
     runs-on: self-hosted
 
     container:
-      image: abhishekf5/maven-abhishek-docker-agent:v1
+      image: maven:3.9-eclipse-temurin-17
       options: --user root
 
     env:

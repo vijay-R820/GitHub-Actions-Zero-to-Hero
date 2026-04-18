@@ -27,7 +27,7 @@ jobs:
 
     - name: Build and Test
       run: |
-        cd java-maven-sonar-argocd-helm-k8s/spring-boot-app
+        cd spring-boot-app
         mvn clean package -e -X
 
     - name: Check Java & Maven Version
@@ -46,7 +46,7 @@ jobs:
 
     - name: Build Docker Image
       run: |
-        cd java-maven-sonar-argocd-helm-k8s/spring-boot-app
+        cd spring-boot-app
         docker build -t vijay/ultimate-cicd:${{ github.run_number }} .
 
     - name: Login to DockerHub

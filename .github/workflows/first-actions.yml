@@ -1,26 +1,71 @@
-name: My First GitHub Actions
+name: CI Pipeline
 
-on: [push]
+on:
+  push:
+    branches: [ "main" ]
 
 jobs:
   build:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        python-version: [3.9]
+    container:
+      image: abhishekf5/maven-abhishek-docker-agent:v1
+      options: --user root
+
+    env:
+      SONAR_URL: http://65.1.129.116:9000
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Verify Python
-      run: python3 --version
-      
-    - name: Install dependencies
-      run: |
-        python3 -m pip install --upgrade pip
-        python3 -m pip install pytest
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-    - name: Run tests
+    - name: Verify Java
       run: |
-        cd src
-        python3 -m pytest addition.py
+        echo "JAVA_HOME = $JAVA_HOME"
+        java -version
+        javac -version
+
+    - name: Build and Test
+      run: |
+        cd java-maven-sonar-argocd-helm-k8s/spring-boot-app
+        mvn clean package -e -X
+
+    - name: Check Java & Maven Version
+      run: |
+        java -version
+        mvn -v
+
+    - name: Static Code Analysis (SonarQube)
+      env:
+        SONAR_AUTH_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      run: |
+        cd /spring-boot-app
+        mvn sonar:sonar \
+          -Dsonar.login=$SONAR_AUTH_TOKEN \
+          -Dsonar.host.url=${SONAR_URL}
+
+    - name: Build Docker Image
+      run: |
+        cd java-maven-sonar-argocd-helm-k8s/spring-boot-app
+        docker build -t vijay/ultimate-cicd:${{ github.run_number }} .
+
+    - name: Login to DockerHub
+      run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+    - name: Push Docker Image
+      run: |
+        docker push vijay/ultimate-cicd:${{ github.run_number }}
+
+    - name: Update Deployment File
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN_CUSTOM }}
+      run: |
+        git config user.email "vijay.r@gmail.com"
+        git config user.name "Vijay R"
+
+        sed -i "s/replaceImageTag/${{ github.run_number }}/g" \
+        spring-boot-manifests/deployment.yml
+
+        git add java-maven-sonar-argocd-helm-k8s/spring-boot-manifests/deployment.yml
+        git commit -m "Update deployment image to version ${{ github.run_number }}"
+        git push https://${GITHUB_TOKEN}@github.com/vijay-R820/GitHub-Actions-Zero-to-Hero HEAD:main

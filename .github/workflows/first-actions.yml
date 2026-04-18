@@ -55,7 +55,7 @@ jobs:
 
     - name: Push Docker Image
       run: |
-        docker push vijay/ultimate-cicd:${{ github.run_number }}
+        docker push vijayr903/ultimate-cicd:${{ github.run_number }}
 
     - name: Update Deployment File
       env:

@@ -39,7 +39,7 @@ jobs:
       env:
         SONAR_AUTH_TOKEN: ${{ secrets.SONAR_TOKEN }}
       run: |
-        cd /spring-boot-app
+        cd spring-boot-app
         mvn sonar:sonar \
           -Dsonar.login=$SONAR_AUTH_TOKEN \
           -Dsonar.host.url=${SONAR_URL}
